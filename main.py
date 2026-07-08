@@ -1,9 +1,18 @@
 """项目入口文件。"""
 
+import sys
+
+from PyQt6.QtWidgets import QApplication
+
+from ui.main_window import MainWindow
+
 
 def main() -> None:
     """启动应用时的入口逻辑。"""
-    print("《江山千里——绘梦成型》项目已初始化。")
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
