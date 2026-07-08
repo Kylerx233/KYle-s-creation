@@ -1,0 +1,7 @@
+PyQt6
+opencv-python
+mediapipe
+pillow
+numpy
+requests
+python-dotenv
