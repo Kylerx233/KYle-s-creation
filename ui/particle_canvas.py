@@ -32,12 +32,19 @@ class ParticleCanvas(QWidget):
         self._timer = QTimer(self)
         self._timer.setInterval(16)
         self._timer.timeout.connect(self._tick)
-        self._timer.start()
 
         self._camera_timer = QTimer(self)
         self._camera_timer.setInterval(33)
         self._camera_timer.timeout.connect(self._update_camera_preview)
+        self._active_particles: list[Particle] | None = None
+
+    def start(self) -> None:
+        self._timer.start()
         self._camera_timer.start()
+
+    def stop(self) -> None:
+        self._timer.stop()
+        self._camera_timer.stop()
 
     def _refresh_camera_preview(self) -> None:
         frame = self.hand_tracker.get_frame()
@@ -103,20 +110,20 @@ class ParticleCanvas(QWidget):
             self._particles.append(Particle(x + offset_x, y + offset_y, color))
 
     def interact(self, x: float, y: float, strength: float) -> None:
-        radius = 110.0
+        radius = 140.0
         for particle in self._particles:
             particle.apply_force(x, y, strength, radius)
 
     def mousePressEvent(self, event) -> None:
         if self._bg_area is None:
             return
-        self.interact(event.position().x(), event.position().y(), 1.4)
+        self.interact(event.position().x(), event.position().y(), 1.8)
 
     def mouseMoveEvent(self, event) -> None:
         if self._bg_area is None:
             return
         if event.buttons() & Qt.MouseButton.LeftButton:
-            self.interact(event.position().x(), event.position().y(), 1.0)
+            self.interact(event.position().x(), event.position().y(), 1.5)
 
     def mouseReleaseEvent(self, event) -> None:
         pass
@@ -137,7 +144,7 @@ class ParticleCanvas(QWidget):
         if position is not None and self._bg_area is not None:
             x = int(position[0] * self.width())
             y = int(position[1] * self.height())
-            self.interact(x, y, 1.4)
+            self.interact(x, y, 1.5)
         self.update()
 
     def resizeEvent(self, event) -> None:

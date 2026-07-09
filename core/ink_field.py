@@ -58,7 +58,7 @@ class InkField:
         diffused = self.diffuser.step(self.field)
         self.persistence *= 0.9985
         self.field = np.maximum(diffused * 0.99, self.persistence * 0.985)
-        self.field = np.clip(self.field, 0.0, 1.0)
+        np.clip(self.field, 0.0, 1.0, out=self.field)
 
     def clear(self) -> None:
         """清空墨场。"""

@@ -19,6 +19,7 @@ class InkBrush:
     def __init__(self, field, base_size: int = 20) -> None:
         self.field = field
         self.base_size = base_size
+        self._stamp_cache: dict[tuple[int, int, int], Image.Image] = {}
 
     def create_stamp(self, x: float, y: float, speed: float, direction: float, density: float = 0.8) -> Image.Image:
         """根据输入生成一个带扩散效果的墨迹印章。"""
@@ -29,6 +30,10 @@ class InkBrush:
         elif speed < 3:
             size = int(size * 1.08)
             density = min(1.0, density * 1.1)
+
+        cache_key = (size, int(direction * 10), int(density * 100))
+        if cache_key in self._stamp_cache:
+            return self._stamp_cache[cache_key]
 
         stamp = Image.new("RGBA", (size * 3, size * 3), (0, 0, 0, 0))
         draw = ImageDraw.Draw(stamp)
@@ -74,7 +79,7 @@ class InkBrush:
                 width=max(1, int(size * 0.18)),
             )
 
-        stamp = stamp.filter(ImageFilter.GaussianBlur(radius=1.0))
+        stamp = stamp.filter(ImageFilter.GaussianBlur(radius=0.9))
         core_after_blur_alpha = int(core_alpha * 0.78)
         draw = ImageDraw.Draw(stamp)
         draw.ellipse(
@@ -86,7 +91,8 @@ class InkBrush:
             ),
             fill=(18, 18, 20, max(core_after_blur_alpha, 160)),
         )
-        stamp = stamp.filter(ImageFilter.UnsharpMask(radius=1.2, percent=20, threshold=2))
+        stamp = stamp.filter(ImageFilter.UnsharpMask(radius=1.2, percent=15, threshold=2))
+        self._stamp_cache[cache_key] = stamp
         return stamp
 
     def render_stroke(self, stroke: Stroke, paper: Image.Image) -> Image.Image:

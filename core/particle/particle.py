@@ -17,12 +17,13 @@ class Particle:
         self.origin_y = y
         self.color = color
         self.alpha = color[3]
-        self.size = max(0.45, min(1.15, (self.alpha / 255.0) * 1.25 + 0.3))
+        self.size = max(1.0, min(2.5, (self.alpha / 255.0) * 2.4 + 0.9))
         self.vx = 0.0
         self.vy = 0.0
         self.history: list[tuple[float, float]] = [(x, y)]
         self.state = "FORM"
         self.noise_phase = random.random() * math.pi * 2
+        self._age = 0
 
     def apply_force(self, fx: float, fy: float, strength: float, radius: float) -> None:
         dx = self.x - fx
@@ -41,14 +42,18 @@ class Particle:
         if len(self.history) > 4:
             self.history.pop(0)
 
-        self.vx += flow_x * 0.08
-        self.vy += flow_y * 0.08
+        self._age += 1
+        noise_strength = 0.24
+        noise_x = math.sin(self._age * 0.064 + self.noise_phase) * noise_strength
+        noise_y = math.cos(self._age * 0.057 + self.noise_phase) * noise_strength
+        self.vx += flow_x * 0.08 + noise_x
+        self.vy += flow_y * 0.08 + noise_y
 
         self.x += self.vx
         self.y += self.vy
 
-        self.vx *= 0.89
-        self.vy *= 0.89
+        self.vx *= 0.90
+        self.vy *= 0.90
 
         if self.state == "SCATTER":
             if math.hypot(self.x - self.origin_x, self.y - self.origin_y) > 16:

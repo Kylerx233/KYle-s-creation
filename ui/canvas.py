@@ -7,7 +7,7 @@ from time import time
 
 from PyQt6.QtCore import QPoint, Qt, QTimer, QSize
 from PyQt6.QtGui import QImage, QPainter, QPixmap, QPen, QColor
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QSizePolicy, QWidget
 from PIL import Image
 
 from core.brush_engine import InkBrushEngine
@@ -23,6 +23,7 @@ class DrawingCanvas(QWidget):
 
     def __init__(self, parent=None, hand_tracker: HandTracker | None = None) -> None:
         super().__init__(parent)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setMinimumSize(900, 600)
         self.setMouseTracking(True)
         self.setStyleSheet("background-color: #f5ebd8; border: 1px solid #c7b28a;")
@@ -39,18 +40,25 @@ class DrawingCanvas(QWidget):
         self._pixmap = QPixmap(self.width(), self.height())
         self._cached_size = self.size()
         self._paper_pixmap: QPixmap | None = None
+        self._paper_qimage: QImage | None = None
 
         self.timer = QTimer(self)
-        self.timer.setInterval(34)
+        self.timer.setInterval(16)
         self.timer.timeout.connect(self._tick)
-        self.timer.start()
 
         self.hand_timer = QTimer(self)
-        self.hand_timer.setInterval(40)
+        self.hand_timer.setInterval(16)
         self.hand_timer.timeout.connect(self._poll_hand_input)
-        self.hand_timer.start()
 
         self._refresh_display()
+
+    def start(self) -> None:
+        self.timer.start()
+        self.hand_timer.start()
+
+    def stop(self) -> None:
+        self.timer.stop()
+        self.hand_timer.stop()
 
     def _tick(self) -> None:
         """每隔一段时间更新一次墨场并刷新显示。"""
@@ -86,22 +94,19 @@ class DrawingCanvas(QWidget):
         """将当前墨场和宣纸纹理合成后刷新显示。"""
         if self._paper_pixmap is None:
             paper_image = self.paper.as_pil_image().convert("RGBA")
-            paper_qimage = QImage(
+            self._paper_qimage = QImage(
                 paper_image.tobytes("raw", "RGBA"),
                 paper_image.width,
                 paper_image.height,
                 QImage.Format.Format_RGBA8888,
             )
-            self._paper_pixmap = QPixmap.fromImage(paper_qimage)
-
-        paper_image = self.paper.as_pil_image().convert("RGBA")
-        ink_image = Image.fromarray(self.field.to_image(), "RGBA")
-        self._display_image = Image.alpha_composite(paper_image, ink_image)
+            self._paper_pixmap = QPixmap.fromImage(self._paper_qimage)
 
         ink_qimage = QImage(
-            self._display_image.tobytes("raw", "RGBA"),
-            self._display_image.width,
-            self._display_image.height,
+            self.field.to_image().tobytes(),
+            self.field.width,
+            self.field.height,
+            self.field.width * 4,
             QImage.Format.Format_RGBA8888,
         )
         ink_pixmap = QPixmap.fromImage(ink_qimage)

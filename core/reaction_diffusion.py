@@ -21,4 +21,5 @@ class ReactionDiffusion:
         neighbors = (up + down + left + right) * 0.25
         updated = field + self.diffusion_rate * (neighbors - field)
         updated *= self.decay
-        return np.clip(updated, 0.0, 1.0)
+        np.clip(updated, 0.0, 1.0, out=updated)
+        return updated

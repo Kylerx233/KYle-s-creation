@@ -76,6 +76,8 @@ class MainWindow(QMainWindow):
 
         layout.addLayout(button_bar)
 
+        self.canvas.start()
+        self.particle_canvas.stop()
         self.play_bgm("canvas")
 
     def _load_bgm_sources(self) -> dict[str, Path]:
@@ -142,11 +144,13 @@ class MainWindow(QMainWindow):
         self.ai_worker.error.connect(self.ai_worker.deleteLater)
         self.ai_thread.finished.connect(self.ai_thread.deleteLater)
         self.ai_thread.start()
+        self.canvas.stop()
 
     def on_ai_finished(self, generated_path: str) -> None:
         try:
             self.particle_canvas.load_image(generated_path)
             self._fade_to_widget(self.particle_canvas)
+            self.particle_canvas.start()
             self.status_label.setText("生成完成，已切换到互动粒子展示。")
             self.play_bgm("particle")
         except Exception as err:
@@ -175,7 +179,15 @@ class MainWindow(QMainWindow):
 
         def on_fade_out_finished() -> None:
             current_widget.setGraphicsEffect(None)
+            if current_widget is self.canvas:
+                self.canvas.stop()
+            elif current_widget is self.particle_canvas:
+                self.particle_canvas.stop()
             self.workspace_stack.setCurrentWidget(target_widget)
+            if target_widget is self.canvas:
+                self.canvas.start()
+            elif target_widget is self.particle_canvas:
+                self.particle_canvas.start()
             target_effect = QGraphicsOpacityEffect(target_widget)
             target_widget.setGraphicsEffect(target_effect)
             target_effect.setOpacity(0.0)
