@@ -5,3 +5,4 @@ output/
 .vscode/
 *.py[cod]
 *.log
+assets/bgm/
