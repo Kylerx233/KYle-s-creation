@@ -14,36 +14,26 @@ class PaperTexture:
 
     def __init__(self, size: tuple[int, int] = (1200, 900)) -> None:
         self.size = size
-        base_assets = Path(__file__).resolve().parent.parent / "assets"
-        self.background_path = base_assets / "background.png"
-        self.texture_path = base_assets / "paper_texture.png"
+        assets_dir = Path(__file__).resolve().parent.parent / "assets"
+        self.texture_path = assets_dir / "background.png"
+        self.fallback_texture = assets_dir / "paper_texture.png"
         self.image = self._load_or_create_texture()
 
-    def _find_background_image(self, base_assets: Path) -> Path | None:
-        """在 assets 目录中查找可用的背景图像文件。"""
-        supported = ["background.png", "background.jpg", "background.jpeg", "wallpaper.png", "wallpaper.jpg", "wallpaper.jpeg"]
-        for name in supported:
-            path = base_assets / name
-            if path.exists():
-                return path
-
-        for ext in ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp"]:
-            for path in sorted(base_assets.glob(ext)):
-                if path.is_file():
-                    return path
-        return None
-
     def _load_or_create_texture(self) -> Image.Image:
-        """优先加载背景图片资源，若不存在则自动生成宣纸噪声纹理。"""
-        base_assets = Path(__file__).resolve().parent.parent / "assets"
-        background_image = self._find_background_image(base_assets)
-        if background_image is not None:
-            image = Image.open(background_image).convert("RGBA")
-            image = image.resize(self.size, Image.Resampling.LANCZOS)
-            return image
-
+        """优先加载 assets/background.png，若不存在则使用 paper_texture.png 或自动生成噪声纹理。"""
         if self.texture_path.exists():
             image = Image.open(self.texture_path).convert("RGBA")
+            if image.size == self.size:
+                return image
+            if self.size == (1920, 1080):
+                return image.resize(self.size, Image.Resampling.LANCZOS)
+            canvas = Image.new("RGBA", self.size, (245, 232, 200, 255))
+            offset = ((self.size[0] - image.width) // 2, (self.size[1] - image.height) // 2)
+            canvas.paste(image, offset)
+            return canvas
+        source_path = self.fallback_texture
+        if source_path.exists():
+            image = Image.open(source_path).convert("RGBA")
             image = image.resize(self.size, Image.Resampling.LANCZOS)
             return image
 

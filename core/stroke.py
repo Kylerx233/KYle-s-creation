@@ -1,76 +1,86 @@
-"""管理单次笔触轨迹数据，方便后续扩展为更复杂的绘画逻辑。"""
+from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from math import atan2, hypot
 from typing import List
-import math
 
 
 @dataclass
 class StrokePoint:
-    """表示一次绘制过程中某一点的状态。"""
-
     x: float
     y: float
     timestamp: float
-    speed: float
-    size: float
-    density: float
+    speed: float = 0.0
+    density: float = 0.8
+    duration: float = 0.0
 
 
-@dataclass
 class Stroke:
-    """保存一段完整笔触。"""
+    """A simple stroke container for drawing and analysis."""
 
-    points: List[StrokePoint] = field(default_factory=list)
+    def __init__(self) -> None:
+        self.points: List[StrokePoint] = []
+        self._stationary_duration: float = 0.0
 
-    def add_point(
-        self,
-        point: StrokePoint | float,
-        y: float | None = None,
-        timestamp: float | None = None,
-        speed: float = 0.0,
-        size: float = 1.0,
-        density: float = 1.0,
-    ) -> None:
-        """追加一个笔触点。
+    def add_point(self, x: float, y: float, timestamp: float) -> None:
+        speed = 0.0
+        dt = 0.0
+        if self.points:
+            last = self.points[-1]
+            dx = x - last.x
+            dy = y - last.y
+            dt = max(1e-3, timestamp - last.timestamp)
+            speed = hypot(dx, dy) / dt
 
-        支持直接传入 StrokePoint 实例，或传入 x, y, timestamp 等原始值。
-        """
-        if isinstance(point, StrokePoint):
-            self.points.append(point)
-            return
+        density = float(min(1.0, max(0.35, 0.85 - speed * 0.02)))
+        self.points.append(
+            StrokePoint(
+                x=x,
+                y=y,
+                timestamp=timestamp,
+                speed=speed,
+                density=density,
+                duration=dt,
+            )
+        )
 
-        if y is None or timestamp is None:
-            raise ValueError("Stroke.add_point requires x, y and timestamp when not passing StrokePoint")
-
-        self.points.append(StrokePoint(point, y, timestamp, speed, size, density))
+        if speed < 1.8:
+            self._stationary_duration += dt
+        else:
+            self._stationary_duration = 0.0
 
     def analyze(self) -> dict[str, float]:
-        """分析当前笔触轨迹并返回速度、方向和曲率。"""
         if len(self.points) < 2:
-            return {"speed": 0.0, "direction": 0.0, "curvature": 0.0}
+            return {"speed": 0.0, "direction": 0.0, "curvature": 0.0, "stationary_time": 0.0}
 
-        last = self.points[-1]
-        prev = self.points[-2]
-        dx = last.x - prev.x
-        dy = last.y - prev.y
-        dt = max(1e-3, last.timestamp - prev.timestamp)
-        speed = ((dx * dx + dy * dy) ** 0.5) / dt
-        direction = float(0.0)
-        if dx != 0.0 or dy != 0.0:
-            direction = float((180.0 / 3.141592653589793) * (math.atan2(dy, dx)))
+        total_speed = 0.0
+        directions: list[float] = []
+        curvatures: list[float] = []
 
-        curvature = 0.0
-        if len(self.points) >= 3:
-            prev2 = self.points[-3]
-            v1x = prev.x - prev2.x
-            v1y = prev.y - prev2.y
-            v2x = last.x - prev.x
-            v2y = last.y - prev.y
-            norm1 = max(1e-3, (v1x * v1x + v1y * v1y) ** 0.5)
-            norm2 = max(1e-3, (v2x * v2x + v2y * v2y) ** 0.5)
-            dot = (v1x * v2x + v1y * v2y) / (norm1 * norm2)
-            dot = max(-1.0, min(1.0, dot))
-            curvature = float(1.0 - abs(dot))
+        for index in range(1, len(self.points)):
+            current = self.points[index]
+            total_speed += current.speed
+            prev = self.points[index - 1]
+            dx = current.x - prev.x
+            dy = current.y - prev.y
+            directions.append(atan2(dy, dx))
 
-        return {"speed": speed, "direction": direction, "curvature": curvature}
+        for index in range(1, len(self.points) - 1):
+            a = self.points[index - 1]
+            b = self.points[index]
+            c = self.points[index + 1]
+            angle1 = atan2(b.y - a.y, b.x - a.x)
+            angle2 = atan2(c.y - b.y, c.x - b.x)
+            delta = abs((angle2 - angle1 + 3.14159) % (2 * 3.14159) - 3.14159)
+            curvatures.append(delta)
+
+        average_speed = total_speed / max(1, len(self.points) - 1)
+        average_direction = float(sum(directions) / len(directions)) if directions else 0.0
+        average_curvature = float(sum(curvatures) / len(curvatures)) if curvatures else 0.0
+
+        return {
+            "speed": average_speed,
+            "direction": average_direction,
+            "curvature": average_curvature,
+            "stationary_time": min(self._stationary_duration, 1.2),
+        }

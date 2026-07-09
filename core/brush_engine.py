@@ -27,19 +27,14 @@ class InkBrushEngine:
             }
 
         analysis = stroke.analyze()
-        speed = float(np.clip(analysis["speed"], 0.2, 20.0))
-        if input_speed is not None:
-            speed = float(np.clip(input_speed, 0.2, 20.0))
         direction = float(analysis["direction"])
-        curvature = float(np.clip(analysis["curvature"], 0.0, 1.5))
 
-        speed_factor = 1.0 - min(speed / 20.0, 1.0)
-        brush_size = float(np.clip(2.2 + speed_factor * 4.5 + curvature * 0.6, 2.0, 7.5))
-        ink_density = float(np.clip(0.65 + speed_factor * 0.85 + curvature * 0.08, 0.4, 1.3))
-        wetness = float(np.clip(0.45 + speed_factor * 0.7, 0.3, 0.95))
-        diffusion_strength = float(np.clip(0.18 + speed_factor * 0.28 + curvature * 0.05, 0.12, 0.55))
-        ink_value = float(np.clip(0.75 + speed_factor * 0.85, 0.5, 1.35))
-        aspect_ratio = float(np.clip(1.0 + curvature * 0.25 + (1.0 - speed_factor) * 0.18, 0.85, 2.0))
+        brush_size = 8.2
+        ink_density = 0.86
+        wetness = 0.92
+        diffusion_strength = 0.42
+        ink_value = 0.95
+        aspect_ratio = 1.0
 
         return {
             "brush_size": brush_size,

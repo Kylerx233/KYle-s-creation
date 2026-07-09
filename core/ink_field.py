@@ -31,18 +31,24 @@ class InkField:
         if not (0 <= x < self.width and 0 <= y < self.height):
             return
 
-        radius = max(2, int(radius or max(3, 8 + amount * 8)))
-        y0 = max(0, y - radius)
-        y1 = min(self.height, y + radius + 1)
-        x0 = max(0, x - radius)
-        x1 = min(self.width, x + radius + 1)
+        radius = radius or max(2, int(3 + amount * 4))
+        radius_x = max(2, int(radius * max(1.0, aspect_ratio)))
+        radius_y = max(2, int(radius * max(0.7, 2.0 - max(1.0, aspect_ratio))))
+        y0 = max(0, y - radius_x)
+        y1 = min(self.height, y + radius_x + 1)
+        x0 = max(0, x - radius_y)
+        x1 = min(self.width, x + radius_y + 1)
 
         yy, xx = np.mgrid[y0:y1, x0:x1]
         dx = xx - x
         dy = yy - y
-        dist2 = dx.astype(np.float32) ** 2 + dy.astype(np.float32) ** 2
-        mask = np.exp(-dist2 / max(1.0, float(radius) ** 2) * 2.0).astype(np.float32)
-        strength = np.clip(amount * (2.5 + wetness * 1.6) * mask, 0.0, 1.0)
+        cos_a = np.cos(direction)
+        sin_a = np.sin(direction)
+        dx_rot = dx * cos_a + dy * sin_a
+        dy_rot = -dx * sin_a + dy * cos_a
+        dist = (dx_rot / max(1, radius_x)) ** 2 + (dy_rot / max(1, radius_y)) ** 2
+        mask = np.exp(-dist * 1.6).astype(np.float32)
+        strength = np.clip(amount * (2.2 + wetness * 1.4) * mask, 0.0, 1.0)
 
         self.persistence[y0:y1, x0:x1] = np.maximum(self.persistence[y0:y1, x0:x1], strength)
         self.field[y0:y1, x0:x1] = np.maximum(self.field[y0:y1, x0:x1], strength)
@@ -50,9 +56,8 @@ class InkField:
     def update(self) -> None:
         """执行简化版扩散更新，同时保留一层稳定的墨痕。"""
         diffused = self.diffuser.step(self.field)
-        self.persistence = np.maximum(self.persistence, self.field)
-        self.persistence *= 0.999
-        self.field = np.maximum(diffused * 0.99, self.persistence * 0.98)
+        self.persistence *= 0.9985
+        self.field = np.maximum(diffused * 0.99, self.persistence * 0.985)
         self.field = np.clip(self.field, 0.0, 1.0)
 
     def clear(self) -> None:
