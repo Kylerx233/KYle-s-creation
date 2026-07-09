@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-import json
 from pathlib import Path
 from typing import Optional
 
@@ -26,31 +25,69 @@ class AIImageGenerator:
         self.config.validate()
 
         with path.open("rb") as f:
-            image_data = f.read()
+            image_data = base64.b64encode(f.read()).decode("ascii")
 
-        # 这里使用 OpenAI 图像生成接口风格，后续替换其他厂商时只需改本函数
-        url = f"{self.config.api_base}/images/generations"
-        payload = {
+        data = {
             "model": self.config.model,
             "prompt": prompt,
-            "image": base64.b64encode(image_data).decode("utf-8"),
-            "size": "1024x1024",
+            "size": "1920x1920",
+            "image_base64": image_data,
         }
 
-        response = requests.post(url, headers=self.config.get_headers(), json=payload, timeout=60)
+        url = self.config.api_base.rstrip("/")
+        try:
+            response = requests.post(
+                url,
+                headers=self.config.get_headers(),
+                json=data,
+                timeout=120,
+            )
+        except requests.RequestException as exc:
+            raise ConnectionError(f"网络请求失败：{exc}") from exc
+
         if response.status_code != 200:
-            raise RuntimeError(f"AI 生成失败: {response.status_code} {response.text}")
+            raise RuntimeError(f"AI 生成失败：{response.status_code} {response.text}")
 
         result = response.json()
-        if not isinstance(result, dict) or "data" not in result or not result["data"]:
-            raise ValueError("AI 返回结果格式错误。")
+        if isinstance(result, list):
+            if not result:
+                raise ValueError("AI 返回结果格式错误：空列表。")
+            result = result[0]
 
-        data_item = result["data"][0]
-        if "b64_json" not in data_item:
-            raise ValueError("AI 返回结果中缺少图像数据。")
+        if not isinstance(result, dict):
+            raise ValueError("AI 返回结果格式错误：非 JSON 字典或列表。")
 
-        generated = base64.b64decode(data_item["b64_json"])
+        data_field = result.get("data")
+        if isinstance(data_field, list) and data_field:
+            data_field = data_field[0]
+
+        image_url = (
+            result.get("image_url")
+            or (data_field.get("url") if isinstance(data_field, dict) else None)
+        )
+        image_base64 = (
+            result.get("image_base64")
+            or (data_field.get("b64_json") if isinstance(data_field, dict) else None)
+        )
+
         output_path = Path("output") / "generated_landscape.png"
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_bytes(generated)
-        return str(output_path)
+
+        if image_base64:
+            try:
+                generated = base64.b64decode(image_base64)
+            except Exception as exc:
+                raise ValueError("AI 返回的 Base64 图像数据无法解码。") from exc
+            output_path.write_bytes(generated)
+            return str(output_path)
+
+        if image_url:
+            try:
+                image_response = requests.get(image_url, timeout=120)
+                image_response.raise_for_status()
+            except requests.RequestException as exc:
+                raise ConnectionError(f"下载生成图像失败：{exc}") from exc
+            output_path.write_bytes(image_response.content)
+            return str(output_path)
+
+        raise ValueError("AI 返回结果中缺少生成图片数据。")

@@ -1,13 +1,15 @@
 # 《江山千里——绘梦成型》
 
 一个基于 Python + PyQt6 + MediaPipe 的中国山水数字绘画交互项目。
-当前已实现摄像头手势输入、食指红点预览与水墨画布实时渲染。
+当前已实现摄像头手势输入、食指红点预览与水墨画布实时渲染，并加入了可视化 AI 图像生成配置入口。
 
 ## 功能概览
 - 摄像头手势绘画输入（MediaPipe HandLandmarker）
 - 画布实时墨迹扩散与持久化显示
-- 食指红点预览叠层
+- 手指红点预览叠层
 - 背景画布（自动读取 `assets` 目录图片）
+- AI 参数面板：可在界面输入 API Key、Base URL、模型 ID，并保存到 `.env`
+- AI 生成结果显示面板
 
 ## 技术栈
 - Python 3.11+
@@ -33,6 +35,7 @@ python -m pip install -r requirements.txt
 ```
 
 ### 3. 配置环境变量（AI 图生图）
+如果你希望直接通过界面保存 API 设置，可先复制示例文件：
 ```bash
 cp .env.example .env
 ```
@@ -41,12 +44,14 @@ Windows PowerShell 可使用：
 Copy-Item .env.example .env
 ```
 
-然后编辑 `.env`：
+然后编辑 `.env`，示例内容为：
 ```text
-OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-image-1
+DOUBAO_API_KEY=
+DOUBAO_API_BASE_URL=https://ark.cn-beijing.volces.com/api/v3/images/generations
+DOUBAO_MODEL=doubao-seedream-5-0-260128
 ```
+
+也可以直接在应用顶部的 `AI 设定` 面板中输入 API Key、Base URL 和模型后点击 `保存 API 设置`。
 
 ### 4. 准备手势模型文件
 项目运行需要 `hand_landmarker.task`，请放在项目根目录：
@@ -62,15 +67,13 @@ python -c "import urllib.request; urllib.request.urlretrieve('https://storage.go
 python main.py
 ```
 
-## API Key 配置
-当前版本的本地手势绘画功能不依赖 API Key。
+## AI 配置说明
+当前版本支持 UI 内直接配置 AI API：
+- `DOUBAO_API_KEY`
+- `DOUBAO_API_BASE_URL`
+- `DOUBAO_MODEL`
 
-后续接入 AI 生图阶段会使用 `.env` 中的密钥，例如：
-- `OPENAI_API_KEY`
-- `OPENAI_BASE_URL`（可选）
-- `OPENAI_MODEL`（可选）
-
-详见 [.env.example](.env.example)。
+点击 `保存 API 设置` 后，配置会写入项目根目录的 `.env` 文件。
 
 ## 当前已完成 vs 计划中
 
@@ -80,12 +83,14 @@ python main.py
 - 食指红点预览层
 - 墨迹扩散与持续留痕
 - 背景图自动加载（`assets/background.png` 或 `assets` 内首张图片）
+- AI 设定面板与 `.env` 持久化保存
+- AI 结果展示面板
 
 ### 计划中
-- AI 图像生成管线接入
-- 粒子互动与动态视觉优化
+- AI 生成稳定性与错误提示优化
+- 粒子互动与动态视觉效果优化
 - 更完善的测试覆盖与 CI
-- 参数面板与可视化调参
+- 异步生成与线程优化，避免 UI 阻塞
 
 ## 运行截图
 
