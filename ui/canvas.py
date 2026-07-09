@@ -25,7 +25,7 @@ class DrawingCanvas(QWidget):
         super().__init__(parent)
         self.setMinimumSize(900, 600)
         self.setMouseTracking(True)
-        self.setStyleSheet("background-color: #f5ebd8; border: 1px solid #c7b28a;")
+        self.setStyleSheet("background: transparent; border: none;")
 
         self.field = InkField(512, 512)
         self.ink_brush = InkBrush()
