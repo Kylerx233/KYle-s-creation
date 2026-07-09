@@ -32,13 +32,20 @@ cd KYle-s-creation
 python -m pip install -r requirements.txt
 ```
 
-### 3. 配置环境变量（AI 阶段预留）
+### 3. 配置环境变量（AI 图生图）
 ```bash
 cp .env.example .env
 ```
 Windows PowerShell 可使用：
 ```powershell
 Copy-Item .env.example .env
+```
+
+然后编辑 `.env`：
+```text
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-image-1
 ```
 
 ### 4. 准备手势模型文件
