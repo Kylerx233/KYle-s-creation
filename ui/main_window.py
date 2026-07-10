@@ -144,13 +144,11 @@ class MainWindow(QMainWindow):
         self.ai_worker.error.connect(self.ai_worker.deleteLater)
         self.ai_thread.finished.connect(self.ai_thread.deleteLater)
         self.ai_thread.start()
-        self.canvas.stop()
 
     def on_ai_finished(self, generated_path: str) -> None:
         try:
             self.particle_canvas.load_image(generated_path)
             self._fade_to_widget(self.particle_canvas)
-            self.particle_canvas.start()
             self.status_label.setText("生成完成，已切换到互动粒子展示。")
             self.play_bgm("particle")
         except Exception as err:
