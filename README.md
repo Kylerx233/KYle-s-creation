@@ -1,148 +1,70 @@
 # 《江山千里——绘梦成型》
 
-基于 Python + PyQt6 + MediaPipe 的中国水墨互动绘画项目。
+《江山千里——绘梦成型》是一套面向数字交互艺术装置的项目：用户先在第一幕绘制草图，随后由 AI 生成青绿山水，再通过流体、粒子和手势交互让画面“活起来”。
 
-项目将摄像头手势、实时水墨笔触、AI 山水生成与粒子交互融合，提供一个可视化的创作与演示体验。
+当前仓库已经开始向 H5 / FastAPI 的双层架构迁移：前端负责场景、流体、粒子与交互，后端负责草图上传、AI 调用和资源编排。
 
-## 主要功能
+## 当前结构
 
-- 实时手势绘画输入：使用 MediaPipe HandLandmarker 识别食指位置
-- 真实墨迹效果：基于扩散与持久化的墨场渲染
-- 第一幕背景纹理：`assets/background.png` 作为 1920x1080 全屏底图
-- 第二幕粒子互动：AI 生成图像后粒子流场与手势/鼠标交互
-- BGM 支持：自动加载 `assets/bgm/` 中的 MP3 文件
-- AI 图生图入口：保存画布草图后，通过 AI 生成山水景致
+- `frontend/`：Vite + WebGL / Canvas2D 的 H5 交互层
+- `backend/`：FastAPI + 豆包 API 的生成服务
+- `core/`、`ui/`：现有桌面版实现，作为迁移参考基线
+- `docs/`：架构、场景、性能与 API 说明
+- `release/`：桌面版打包产物
 
-## 技术栈
+## 快速开始
 
-- Python 3.11+
-- PyQt6
-- OpenCV
-- MediaPipe Tasks
-- Pillow
-- NumPy
-- Requests
-- python-dotenv
-
-## 安装与运行
-
-### 1. 克隆仓库
-
-```bash
-git clone https://github.com/Kylerx233/KYle-s-creation.git
-cd KYle-s-creation
-```
-
-### 2. 安装依赖
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-### 3. 准备手势模型
-
-项目需要放置 `hand_landmarker.task` 到项目根目录。
-
-如果文件缺失，可使用：
-
-```bash
-python -c "import urllib.request; urllib.request.urlretrieve('https://storage.googleapis.com/mediapipe-tasks/hand_landmarker/hand_landmarker.task', 'hand_landmarker.task')"
-```
-
-### 4. 可选：配置 AI 生成
-
-复制示例环境文件：
-
-```bash
-cp .env.example .env
-```
-
-Windows PowerShell：
-
-```powershell
-Copy-Item .env.example .env
-```
-
-然后编辑 `.env`：
-
-```text
-DOUBAO_API_KEY=
-DOUBAO_API_BASE_URL=https://ark.cn-beijing.volces.com/api/v3/images/generations
-DOUBAO_MODEL=doubao-seedream-5-0-260128
-```
-
-也可以启动应用后，在 `AI 设定` 面板中输入参数并保存。
-
-### 5. 添加背景与音乐资源
-
-- 背景图：`assets/background.png`
-- BGM 文件：放入 `assets/bgm/` 目录，程序会自动加载第 1 个文件作为第一幕 BGM，第 2 个文件作为第二幕 BGM。
-
-> 注意：本仓库已将 `assets/bgm/*.mp3` 添加到 `.gitignore`，请不要直接提交音频文件。
-
-### 6. 启动应用
+### 桌面版（当前稳定版）
 
 ```bash
 python main.py
 ```
 
-## 开发流程
-
-### 主要目录
-
-```text
-.
-├── assets/              # 背景与运行资源
-├── core/                # 核心逻辑与渲染模块
-├── ui/                  # PyQt6 可视化组件
-├── tests/               # 测试用例目录
-├── main.py              # 应用入口
-├── requirements.txt     # Python 依赖
-├── README.md            # 项目说明
-└── CONTRIBUTING.md      # 贡献指南
-```
-
-### 开发说明
-
-- `ui/main_window.py`：主界面与场景切换
-- `ui/canvas.py`：第一幕水墨绘制画布
-- `ui/particle_canvas.py`：第二幕粒子交互画布
-- `core/ink_brush.py`：墨迹印章与注入逻辑
-- `core/ink_field.py`：墨场扩散与持久化
-- `core/paper.py`：背景纹理与 `assets/background.png` 加载
-
-### 本地开发步骤
-
-1. 新建功能分支：
+### H5 前端（开发中）
 
 ```bash
-git checkout -b feature/your-feature-name
+cd frontend
+npm install
+npm run dev
 ```
 
-2. 实现功能并运行本地测试
-
-3. 提交改动：
+### 后端（开发中）
 
 ```bash
-git add .
-git commit -m "feat: add ..."
+cd backend
+python -m pip install -e .
+uvicorn app.main:app --reload
 ```
 
-4. 推送分支并创建 Pull Request
+## 核心文档
 
-```bash
-git push origin feature/your-feature-name
+- [architecture.md](docs/architecture.md)
+- [scenes.md](docs/scenes.md)
+- [performance.md](docs/performance.md)
+- [api.md](docs/api.md)
+- [foundation.md](docs/foundation.md)
+- [release.md](docs/release.md)
+
+## 正式制作流程
+
+### 一键验收
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-## 贡献与反馈
+### CI 自动验收
 
-欢迎提交 Issues、PR 或建议：
+- 工作流文件：`.github/workflows/ci.yml`
+- Push 或 PR 会自动执行后端测试、根目录测试、前端构建
 
-- 添加新手势玩法
-- 优化粒子/墨迹渲染
-- 提升 AI 生成流程
-- 补齐测试与 CI
+## 开发原则
 
-## 版权与许可
+- 艺术表达优先，技术为视觉服务
+- 60 FPS 优先，禁止无谓的每帧对象创建
+- 模块化、可测试、可扩展
+- Python 保留 AI / 手势 / 资源管理，H5 负责实时视觉表现
+
+## 许可
 
 本项目使用 MIT 许可证，详见 [LICENSE](LICENSE)。

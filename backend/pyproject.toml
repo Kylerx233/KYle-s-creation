@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jiangshanqianli-backend"
+version = "0.1.0"
+description = "FastAPI backend for JiangShanQianLi digital art project"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.30.0",
+  "pydantic>=2.8.0",
+  "pydantic-settings>=2.4.0",
+  "python-multipart>=0.0.9",
+  "httpx>=0.27.0",
+  "python-dotenv>=1.0.1"
+]
+
+[tool.setuptools]
+packages = ["app"]
