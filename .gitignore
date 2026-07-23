@@ -1,12 +1,33 @@
+# Python
 .venv/
 __pycache__/
-.env
-output/
-.vscode/
-node_modules/
-frontend/node_modules/
-frontend/dist/
-backend/.venv/
 *.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Environment
+.env
+
+# Node
+node_modules/
+frontend/dist/
+.vite/
+
+# Output
+output/
+backend/output/
+
+# IDE
+.vscode/
+.idea/
+
+# Build
+release/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
-assets/bgm/

@@ -1,70 +1,129 @@
-# 《江山千里——绘梦成型》
+# 江山千里——绘梦成型
 
-《江山千里——绘梦成型》是一套面向数字交互艺术装置的项目：用户先在第一幕绘制草图，随后由 AI 生成青绿山水，再通过流体、粒子和手势交互让画面“活起来”。
+> AI × Interactive Art — 数字青绿山水交互装置
 
-当前仓库已经开始向 H5 / FastAPI 的双层架构迁移：前端负责场景、流体、粒子与交互，后端负责草图上传、AI 调用和资源编排。
+基于《千里江山图》美学，结合 AI 图像生成、Shader 流体模拟与手势识别的数字艺术交互作品。
 
-## 当前结构
+---
 
-- `frontend/`：Vite + WebGL / Canvas2D 的 H5 交互层
-- `backend/`：FastAPI + 豆包 API 的生成服务
-- `core/`、`ui/`：现有桌面版实现，作为迁移参考基线
-- `docs/`：架构、场景、性能与 API 说明
-- `release/`：桌面版打包产物
+## 体验流程
 
-## 快速开始
-
-### 桌面版（当前稳定版）
-
-```bash
-python main.py
+```
+首页 → Scene 1 绘梦 → Scene 2 墨生山河 → Scene 3 画卷徐开 → Scene 4 山河苏醒
 ```
 
-### H5 前端（开发中）
+| 场景 | 说明 | 交互方式 |
+|---|---|---|
+| **Scene 1 · 绘梦** | 水墨画板，隔空绘制草图 | ☝️ 伸食指绘画 / 👌 OK 手势提交 |
+| **Scene 2 · 墨生山河** | 雾散裱画，AI 生成山水 | 自动播放，展示科普文案 |
+| **Scene 3 · 画卷徐开** | 画卷卷起再展开，AI 山水呈现 | 自动播放 |
+| **Scene 4 · 山河苏醒** | 山水互动，手势拂水，诗意浮现 | 手指拂过水面 / 按 E 触发归卷 |
+
+---
+
+## 技术架构
+
+```
+前端: Vite + Three.js + Canvas 2D + MediaPipe
+后端: FastAPI + 豆包 Seedream API
+```
+
+### Scene 4 渲染管线
+
+```
+手势/鼠标 → uMouseVel
+                ↓
+Disturb Shader → Ping-Pong 双缓冲 → Screen Shader → 屏幕
+  径向推开         颜料沉积累积       涟漪/呼吸/云雾
+  方向拖拽                          青绿调色/暗角
+```
+
+### 手势系统
+
+- **MediaPipe HandLandmarker** — 单手 21 关键点实时追踪
+- **绘画** `isDrawing` — 食指伸直 + 其余三指蜷曲
+- **提交** `isOK` — 拇指食指捏合 + 其余三指伸直
+- **扰动** — 食指位置映射为 Shader 水波速度场
+
+---
+
+## 快速启动
+
+### 前端
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npx vite --port 5175
 ```
 
-### 后端（开发中）
+### 后端
 
 ```bash
 cd backend
-python -m pip install -e .
-uvicorn app.main:app --reload
+cp .env.example .env   # 填写 DOUBAO_API_KEY
+uvicorn app.main:app --port 8001
 ```
 
-## 核心文档
+---
 
-- [architecture.md](docs/architecture.md)
-- [scenes.md](docs/scenes.md)
-- [performance.md](docs/performance.md)
-- [api.md](docs/api.md)
-- [foundation.md](docs/foundation.md)
-- [release.md](docs/release.md)
+## 项目结构
 
-## 正式制作流程
-
-### 一键验收
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/verify.ps1
+```
+JiangShanQianLi/
+├── frontend/src/
+│   ├── scene/           # 场景 Scene 1-4
+│   │   ├── sceneDraw.js      第一幕 · 绘梦
+│   │   ├── sceneGenerate.js  第二幕 · 墨生山河
+│   │   ├── sceneUnfold.js    第三幕 · 画卷徐开
+│   │   └── sceneAwaken.js    第四幕 · 山河苏醒
+│   ├── systems/
+│   │   ├── drawing/     # 水墨笔刷 + 画板
+│   │   ├── fluid/       # 流体模拟
+│   │   ├── gesture/     # MediaPipe 手势适配
+│   │   └── audio/       # BGM 管理
+│   ├── core/            # Ticker / EventBus / StateMachine
+│   ├── services/        # API 客户端
+│   └── ui/              # HUD 调试面板
+├── backend/app/
+│   ├── api/v1/          # REST API
+│   ├── services/        # 豆包 Seedream 服务
+│   └── models/          # 数据模型
+└── assets/              # 背景图 / BGM / 字体
 ```
 
-### CI 自动验收
+---
 
-- 工作流文件：`.github/workflows/ci.yml`
-- Push 或 PR 会自动执行后端测试、根目录测试、前端构建
+## 字体系统
 
-## 开发原则
+| 层级 | 字体 | 用途 |
+|---|---|---|
+| 主标题 | **Ma Shan Zheng** | 首页、卷轴题跋、归卷字幕 |
+| 诗句 | **LXGW WenKai** | 互动文字气泡 |
+| 正文 | **Noto Serif SC** | 科普文案、展签 |
+| UI | **Noto Sans SC** | 按钮、提示 |
 
-- 艺术表达优先，技术为视觉服务
-- 60 FPS 优先，禁止无谓的每帧对象创建
-- 模块化、可测试、可扩展
-- Python 保留 AI / 手势 / 资源管理，H5 负责实时视觉表现
+---
 
-## 许可
+## BGM
 
-本项目使用 MIT 许可证，详见 [LICENSE](LICENSE)。
+- **空山私语** — 首页 + Scene 1-3
+- **江南烟雨** — Scene 4（淡入过渡）
+
+---
+
+## 致谢
+
+- 《千里江山图》王希孟（北宋）
+- 豆包 Seedream API
+- MediaPipe HandLandmarker
+- Three.js
+- BGM: rainstreetcat
+
+---
+
+## 作者
+
+**胡箬玺** — 中国传媒大学 25 级智能工程与创意设计
+
+2026

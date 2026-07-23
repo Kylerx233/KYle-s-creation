@@ -8,9 +8,12 @@ import { GenerationService } from './services/generationService.js';
 import { GestureInputAdapter } from './systems/gesture/gestureInputAdapter.js';
 import { APP_EVENTS, SCENE_EVENTS } from './config/constants.js';
 
+const DEBUG_HUD = false;
+
 export class App {
-  constructor(rootElement) {
+  constructor(rootElement, audioManager = null) {
     this.rootElement = rootElement;
+    this.audio = audioManager;
     this.kernel = new AppKernel();
     this.appState = new AppState();
     this.eventBus = this.kernel.eventBus;
@@ -47,6 +50,10 @@ export class App {
       this.sceneManager.transition(SCENE_EVENTS.NEXT);
     });
 
+    this.eventBus.on('scene:awaken-enter', () => {
+      if (this.audio) this.audio.crossfade('mist', 1500);
+    });
+
     this.eventBus.on(APP_EVENTS.REQUEST_RESTART_SCENE, () => {
       this.sceneManager.transition(SCENE_EVENTS.RESTART);
     });
@@ -54,11 +61,11 @@ export class App {
 
   start() {
     this.sceneManager.start('scene-draw');
-    this.hud.mount();
+    if (DEBUG_HUD) this.hud.mount();
     this.ticker.start((timeDelta) => {
       this.kernel.update(timeDelta);
       this.sceneManager.update(timeDelta);
-      this.hud.refresh();
+      if (DEBUG_HUD) this.hud.refresh();
     });
   }
 }

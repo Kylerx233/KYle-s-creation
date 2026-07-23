@@ -30,6 +30,8 @@ export class DrawingBoard {
     this.gestureDrawing = false;
     this.lastGesturePoint = null;
     this.disposeGestureListener = null;
+    this.disposeStateListener = null;
+    this.gestureState = null;
     this.inkField = null;
     this.inkRenderInterval = 33;
     this.inkAccumulator = 0;
@@ -62,23 +64,23 @@ export class DrawingBoard {
   mount() {
     this.wrapper.innerHTML = `
       <div class="drawing-header">
-        <div class="drawing-title">第一幕 · 绘梦起笔</div>
-        <div class="drawing-hint">拖动落笔，速度与压力会影响墨迹粗细与浓淡</div>
+        <div class="drawing-title">绘梦 · 起笔</div>
+        <div class="drawing-hint">指间山河，落墨成景</div>
       </div>
       <div class="drawing-tools">
         <label>
-          笔锋
+          <span class="tool-label">笔意</span>
           <input type="range" min="6" max="56" step="1" value="22" data-role="brush-size" />
-          <span data-role="size">22</span>
+          <span class="tool-val" data-role="size">22</span>
         </label>
         <label>
-          墨量
+          <span class="tool-label">墨韵</span>
           <input type="range" min="15" max="100" step="1" value="70" data-role="ink-load" />
-          <span data-role="ink">70</span>
+          <span class="tool-val" data-role="ink">70</span>
         </label>
-        <button class="scene-button drawing-tool-button" data-action="undo">撤销</button>
-        <button class="scene-button drawing-tool-button" data-action="clear">清空</button>
-        <button class="scene-button drawing-tool-button" data-action="gesture-toggle">手势模式：关</button>
+        <button class="drawing-tool-btn" data-action="undo">收笔</button>
+        <button class="drawing-tool-btn" data-action="clear">重绘</button>
+        <button class="drawing-tool-btn" data-action="gesture-toggle">手势：关</button>
       </div>
     `;
     this.wrapper.appendChild(this.fluidCanvas);
@@ -288,6 +290,15 @@ export class DrawingBoard {
     this.gestureEnabled = true;
     this.gestureInputAdapter.start();
     this.disposeGestureListener = this.gestureInputAdapter.onInput((payload) => this.handleGestureInput(payload));
+
+    // 把手势适配器的状态变化同步过来
+    this.disposeStateListener = this.gestureInputAdapter.onStateChange((state) => {
+      this.gestureState = state;
+      this.updateGestureToggleText();
+    });
+
+    // 隐藏鼠标绘画指针，避免视觉干扰
+    this.canvas.style.cursor = 'none';
   }
 
   disableGestureMode() {
@@ -297,18 +308,48 @@ export class DrawingBoard {
     this.gestureEnabled = false;
     this.gestureDrawing = false;
     this.lastGesturePoint = null;
+    this.gestureState = null;
     this.finalizeActiveStroke();
     if (this.disposeGestureListener) {
       this.disposeGestureListener();
       this.disposeGestureListener = null;
     }
+    if (this.disposeStateListener) {
+      this.disposeStateListener();
+      this.disposeStateListener = null;
+    }
     this.gestureInputAdapter?.stop();
+    this.canvas.style.cursor = 'crosshair';
   }
 
   updateGestureToggleText() {
     const button = this.wrapper.querySelector('[data-action="gesture-toggle"]');
-    if (button) {
-      button.textContent = `手势模式：${this.gestureEnabled ? '开' : '关'}`;
+    if (!button) return;
+
+    if (!this.gestureEnabled) {
+      button.textContent = '手势：关';
+      button.style.background = '';
+      return;
+    }
+
+    const state = this.gestureState || 'starting';
+    switch (state) {
+      case 'starting':
+        button.textContent = '手势：就绪中';
+        button.style.background = 'rgba(140,115,85,.25)';
+        break;
+      case 'camera':
+        button.textContent = '手势：开';
+        button.style.background = 'rgba(60,100,75,.2)';
+        break;
+      case 'fallback':
+        button.textContent = '手势：鼠标';
+        button.style.background = 'rgba(90,74,50,.2)';
+        break;
+      case 'error':
+        button.textContent = '手势：不可用';
+        button.style.background = 'rgba(140,60,60,.2)';
+        break;
     }
   }
 
@@ -317,10 +358,25 @@ export class DrawingBoard {
       return;
     }
 
+    // 将屏幕坐标转换为 Canvas 局部坐标
+    const rect = this.canvas.getBoundingClientRect();
+    const scaleX = this.canvas.width / rect.width;
+    const scaleY = this.canvas.height / rect.height;
     const point = {
-      x: Math.max(0, Math.min(this.canvas.width, payload.x)),
-      y: Math.max(0, Math.min(this.canvas.height, payload.y)),
+      x: (payload.x - rect.left) * scaleX,
+      y: (payload.y - rect.top) * scaleY,
     };
+
+    // 边界裁剪
+    if (point.x < 0 || point.x > this.canvas.width || point.y < 0 || point.y > this.canvas.height) {
+      // 手指移出画布区域，结束当前笔画
+      if (this.gestureDrawing) {
+        this.gestureDrawing = false;
+        this.lastGesturePoint = null;
+        this.finalizeActiveStroke();
+      }
+      return;
+    }
 
     if (payload.isDrawing) {
       if (!this.gestureDrawing) {
@@ -335,7 +391,11 @@ export class DrawingBoard {
       }
 
       if (this.lastGesturePoint) {
-        this.drawSegment(this.lastGesturePoint, point, 0.62);
+        // 过滤掉过远的跳跃点（如手部移出又移入）
+        const dist = Math.hypot(point.x - this.lastGesturePoint.x, point.y - this.lastGesturePoint.y);
+        if (dist < this.canvas.width * 0.3) {
+          this.drawSegment(this.lastGesturePoint, point, 0.62);
+        }
       }
       this.activeStroke?.points.push(point);
       this.lastGesturePoint = point;

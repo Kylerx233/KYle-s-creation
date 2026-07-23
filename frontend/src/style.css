@@ -1,3 +1,90 @@
+/* ===== 字体系统 ===== */
+:root {
+  --font-title:   'Ma Shan Zheng', 'Noto Serif SC', serif;   /* 主标题：近似瘦金书 */
+  --font-poem:    'LXGW WenKai', 'Noto Serif SC', serif;     /* 互动诗句：霞鹜文楷 */
+  --font-display: 'Noto Serif SC', serif;                     /* 科普文字：思源宋体 */
+  --font-ui:      'Noto Sans SC', 'PingFang SC', sans-serif;  /* UI功能：思源黑体 */
+}
+#home-title   { font-family: var(--font-title); }
+#home-subtitle { font-family: var(--font-display); }
+#home-enter   { font-family: var(--font-ui); }
+.gen-caption  { font-family: var(--font-display); }
+.gen-caption h3 { font-family: var(--font-title); }
+.poem-bubble {
+  font-family: var(--font-poem);
+  filter: drop-shadow(0 2px 8px rgba(180,160,120,.3));
+  user-select: none;
+  -webkit-user-select: none;
+}
+.tutorial-card { font-family: var(--font-display); }
+.tutorial-card h2 { font-family: var(--font-title); }
+.scene-button,
+.drawing-tool-button,
+.scene-inline-status,
+.drawing-hint { font-family: var(--font-ui); }
+
+/* ===== 首页 ===== */
+#homepage {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+}
+#home-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#home-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.45) 50%, rgba(0,0,0,.6) 100%);
+}
+#home-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #f0e8d8;
+}
+#home-title {
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 400;
+  letter-spacing: .15em;
+  margin: 0;
+  text-shadow: 0 2px 20px rgba(0,0,0,.5);
+}
+#home-subtitle {
+  font-size: clamp(1.2rem, 2.5vw, 2rem);
+  font-weight: 300;
+  letter-spacing: .25em;
+  margin: .6rem 0 2.5rem;
+  opacity: .85;
+  text-shadow: 0 1px 12px rgba(0,0,0,.4);
+}
+#home-enter {
+  font-size: 1.05rem;
+  letter-spacing: .12em;
+  padding: .75rem 2.8rem;
+  border: 1px solid rgba(220,200,160,.5);
+  border-radius: 40px;
+  background: rgba(0,0,0,.35);
+  color: #e8dcc8;
+  cursor: pointer;
+  transition: all .35s;
+  backdrop-filter: blur(4px);
+}
+#home-enter:hover {
+  background: rgba(180,150,100,.3);
+  border-color: rgba(220,200,160,.8);
+  color: #fff;
+  box-shadow: 0 0 30px rgba(180,150,100,.2);
+}
+
 html,
 body,
 #app {
@@ -7,7 +94,7 @@ body,
 }
 
 body {
-  font-family: "Noto Serif SC", "Source Han Serif SC", serif;
+  font-family: var(--font-ui);
   background: linear-gradient(180deg, #efe6d4 0%, #e4d3b0 100%);
   color: #1f2a24;
   position: relative;
@@ -85,17 +172,47 @@ body::before {
 
 .scene-inline-controls {
   position: absolute;
-  right: 1rem;
-  bottom: 1rem;
+  right: 1.5rem;
+  bottom: 2rem;
   z-index: 3;
   text-align: right;
 }
 
 .scene-inline-status {
-  margin-top: 0.4rem;
-  font-size: 0.82rem;
-  color: #1f2a24;
-  opacity: 0.78;
+  margin-top: .5rem;
+  font-family: var(--font-display);
+  font-size: .82rem; color: #8a7a60;
+  opacity: .78;
+}
+
+/* 入画按钮 */
+.submit-enter-btn {
+  font-family: var(--font-title);
+  font-size: 1.3rem; letter-spacing: .25em;
+  padding: .6rem 2.2rem;
+  color: #5a4030; background: rgba(240,230,210,.55);
+  border: 1px solid rgba(140,110,70,.3); border-radius: 4px;
+  cursor: pointer; transition: all .35s;
+  backdrop-filter: blur(4px);
+}
+.submit-enter-btn:hover {
+  background: rgba(200,170,130,.4); border-color: rgba(120,90,50,.5);
+  color: #3a2818; box-shadow: 0 0 24px rgba(160,130,90,.15);
+}
+
+/* 墨迹扩散 */
+.ink-diffusion {
+  position: fixed; z-index: 99; pointer-events: none;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(20,18,14,.95);
+  top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.ink-diffusion.ink-spread {
+  transition: transform .9s cubic-bezier(.22,.01,.1,1), opacity .5s ease .2s;
+  transform: translate(-50%,-50%) scale(250);
+  opacity: 1;
 }
 
 .scene-preview {
@@ -209,6 +326,14 @@ body::before {
   width: 100%;
   height: 100%;
 }
+/* 宣纸纹理 */
+.drawing-board::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(180,160,130,.018) 2px, rgba(180,160,130,.018) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(170,150,120,.012) 3px, rgba(170,150,120,.012) 6px);
+  opacity: .55;
+}
 
 .fluid-canvas {
   position: absolute;
@@ -244,48 +369,147 @@ body::before {
   mix-blend-mode: screen;
 }
 
+/* 雾气覆盖层 — 在画板上方 */
+.fog-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  mix-blend-mode: normal;
+}
+
 .drawing-header {
   position: absolute;
-  left: 1.1rem;
-  top: 1rem;
-  z-index: 2;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
-  background: rgba(255, 248, 234, 0.72);
-  backdrop-filter: blur(10px);
+  left: 1.2rem; top: 1.2rem; z-index: 2;
+  padding: .7rem 1rem;
+  border-left: 2px solid rgba(140,110,70,.35);
+  background: rgba(250,245,235,.55);
+  backdrop-filter: blur(6px);
 }
+.drawing-title { font-family: var(--font-title); font-size: 1.15rem; color: #5a4530; letter-spacing: .12em; }
+.drawing-hint { font-size: .75rem; color: #8a7a60; margin-top: .15rem; letter-spacing: .06em; }
 
 .drawing-tools {
   position: absolute;
-  left: 1.1rem;
-  top: 6.2rem;
-  z-index: 2;
-  display: grid;
-  gap: 0.5rem;
-  width: min(360px, 72vw);
-  padding: 0.9rem;
-  border-radius: 14px;
-  background: rgba(255, 248, 234, 0.7);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 28px rgba(45, 39, 26, 0.12);
+  left: 1.2rem; top: 7.4rem; z-index: 2;
+  display: flex; flex-direction: column; gap: .35rem;
+  width: min(220px, 55vw);
+  padding: .8rem .9rem;
+  background: rgba(248,242,230,.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(160,130,90,.15);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(40,30,15,.06);
 }
-
 .drawing-tools label {
   display: grid;
-  grid-template-columns: 50px 1fr 38px;
+  grid-template-columns: 38px 1fr 32px;
+  align-items: center; gap: .4rem;
+  font-size: .8rem; color: #6b5a3e;
+}
+.tool-label { font-family: var(--font-display); letter-spacing: .06em; }
+.tool-val { font-family: var(--font-ui); text-align: right; font-size: .75rem; color: #8a7560; }
+.drawing-tools input[type='range'] {
+  width: 100%; accent-color: #8a7a50;
+}
+.drawing-tool-btn {
+  font-family: var(--font-display);
+  margin-top: .15rem; padding: .4rem .6rem;
+  font-size: .8rem; letter-spacing: .06em;
+  color: #6b5538; background: rgba(200,180,150,.25);
+  border: 1px solid rgba(150,120,80,.2); border-radius: 4px;
+  cursor: pointer; transition: all .25s;
+}
+.drawing-tool-btn:hover {
+  background: rgba(180,150,110,.35); border-color: rgba(140,110,70,.35);
+}
+
+/* ---------- 生成场景 ---------- */
+
+.generate-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.gen-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 1.8rem;
+}
+
+.gen-overlay button {
+  pointer-events: auto;
+}
+
+.gen-status-bar {
+  display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.86rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  background: rgba(28, 34, 28, 0.72);
+  color: #f5ead7;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.5rem;
+  backdrop-filter: blur(8px);
 }
 
-.drawing-tools input[type='range'] {
-  width: 100%;
+.gen-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #999;
+  transition: background 0.4s;
 }
 
-.drawing-tool-button {
-  margin-top: 0;
-  padding: 0.45rem 0.7rem;
+.gen-status-dot.idle {
+  background: #c9a96e;
+}
+
+.gen-status-dot.gathering,
+.gen-status-dot.concealing,
+.gen-status-dot.holding {
+  background: #6eb5ff;
+  animation: dot-pulse 0.8s ease-in-out infinite;
+}
+
+.gen-status-dot.revealing {
+  background: #7ecf8a;
+  animation: dot-pulse 1.2s ease-in-out infinite;
+}
+
+.gen-status-dot.done {
+  background: #5fbf6e;
+}
+
+.gen-status-dot.error {
+  background: #e05555;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.gen-hint {
+  color: rgba(31, 42, 36, 0.58);
   font-size: 0.85rem;
+  margin: 0 0 0.65rem;
+  letter-spacing: 0.05em;
+}
+
+.gen-button {
+  margin-top: 0;
 }
 
 .drawing-title {
@@ -309,3 +533,42 @@ body::before {
   font-size: 1rem;
   opacity: 0.8;
 }
+
+/* 绘画引导 */
+.tutorial-card {
+  background: rgba(22,20,16,.94);
+  border: 1px solid rgba(180,160,120,.25);
+  border-radius: 12px;
+  padding: 2.2rem 2.5rem;
+  text-align: center;
+  color: #e0d5c0;
+  max-width: 360px;
+}
+.tutorial-icon { font-size: 2.5rem; margin-bottom: .4rem; }
+.tutorial-card h2 { margin: 0 0 .8rem; font-size: 1.35rem; font-weight: 400; letter-spacing: .1em; }
+.tutorial-card p { margin: .35rem 0; font-size: .9rem; opacity: .75; line-height: 1.7; }
+.tutorial-card b { color: #c8a868; }
+.tutorial-hint { margin-top: 1rem !important; font-size: .75rem !important; opacity: .45 !important; }
+
+/* Scene 2 科普文案 */
+.gen-captions {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; transition: opacity .8s;
+}
+.gen-caption {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: 26%; max-width: 300px;
+  color: #8a7a60;
+  font-size: .85rem; line-height: 1.75;
+  text-align: justify;
+}
+.gen-caption-left  { left: 5%; }
+.gen-caption-right { right: 5%; }
+.gen-caption h3 {
+  font-size: 1.15rem; font-weight: 400; margin: 0 0 .8rem;
+  color: #6b5a40; letter-spacing: .08em;
+}
+.gen-caption p { margin: .4rem 0; }
+.gen-caption b { color: #5a7a50; font-weight: 500; }

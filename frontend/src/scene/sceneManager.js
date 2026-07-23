@@ -3,8 +3,6 @@ import { sceneDraw, SceneDraw } from './sceneDraw.js';
 import { sceneGenerate, SceneGenerate } from './sceneGenerate.js';
 import { sceneUnfold, SceneUnfold } from './sceneUnfold.js';
 import { sceneAwaken, SceneAwaken } from './sceneAwaken.js';
-import { sceneGesture, SceneGesture } from './sceneGesture.js';
-import { sceneShowcase, SceneShowcase } from './sceneShowcase.js';
 
 export class SceneManager {
   constructor({ rootElement, eventBus, ticker, stateMachine, generationService, appState, gestureInputAdapter }) {
@@ -50,21 +48,7 @@ export class SceneManager {
         eventBus: this.eventBus,
         ticker: this.ticker,
         appState: this.appState,
-      });
-    } else if (sceneName === sceneGesture.name) {
-      scene = new SceneGesture({
-        rootElement: this.rootElement,
-        eventBus: this.eventBus,
-        ticker: this.ticker,
-        appState: this.appState,
         gestureInputAdapter: this.gestureInputAdapter,
-      });
-    } else if (sceneName === sceneShowcase.name) {
-      scene = new SceneShowcase({
-        rootElement: this.rootElement,
-        eventBus: this.eventBus,
-        ticker: this.ticker,
-        appState: this.appState,
       });
     } else {
       scene = new SceneDraw({

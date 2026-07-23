@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.35",
-    "three": "^0.166.1"
+    "three": "^0.166.1",
+    "three-nebula": "^11.1.0"
   },
   "devDependencies": {
     "vite": "^5.4.8"

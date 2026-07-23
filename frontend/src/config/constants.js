@@ -6,8 +6,6 @@ export const SCENE_SEQUENCE = [
   'scene-generate',
   'scene-unfold',
   'scene-awaken',
-  'scene-gesture',
-  'scene-showcase',
 ];
 export const SCENE_EVENTS = {
   NEXT: 'NEXT_SCENE',
