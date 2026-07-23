@@ -23,12 +23,18 @@
 
 ---
 
-## 技术架构
+## 技术栈
 
-```
-前端: Vite + Three.js + Canvas 2D + MediaPipe
-后端: FastAPI + 豆包 Seedream API
-```
+| 层 | 技术 | 说明 |
+|---|---|---|
+| **前端框架** | Vite + Vanilla JS | 模块化场景管理 |
+| **3D/Shader** | Three.js + GLSL | OrthographicCamera + ShaderMaterial |
+| **2D 渲染** | Canvas 2D API | 水墨笔刷、画卷、雾气 |
+| **手势识别** | MediaPipe HandLandmarker | 21 关键点实时追踪 |
+| **后端** | FastAPI + httpx | REST API，图片处理 |
+| **AI 生成** | 豆包 Seedream API (火山方舟) | 草图 → 青绿山水 |
+| **字体** | Google Fonts | Ma Shan Zheng / LXGW WenKai / Noto Serif SC / Noto Sans SC |
+| **音频** | Web Audio | 双轨 BGM 淡入淡出切换 |
 
 ### Scene 4 渲染管线
 
@@ -49,7 +55,22 @@ Disturb Shader → Ping-Pong 双缓冲 → Screen Shader → 屏幕
 
 ---
 
-## 快速启动
+## 核心功能
+
+- **手势隔空绘画** — MediaPipe 手部追踪，食指绘画/OK 提交，零接触交互
+- **AI 山水生成** — 豆包 Seedream API，草图→青绿山水
+- **实时 Shader 水波** — Ping-Pong 双缓冲 + 自定义 GLSL 扰动/涟漪/云雾
+- **动态诗句系统** — 根据交互强度自动浮现东方诗意文字气泡
+- **归卷动画** — CSS 卷轴合拢 + 题跋淡入，山河终归于静
+- **双轨 BGM** — 空山私语 / 江南烟雨，随场景自动切换
+
+## 本地运行
+
+### 环境要求
+
+- Node.js >= 18
+- Python >= 3.11
+- 摄像头（手势交互需要）
 
 ### 前端
 
@@ -63,9 +84,14 @@ npx vite --port 5175
 
 ```bash
 cd backend
-cp .env.example .env   # 填写 DOUBAO_API_KEY
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e .
+cp .env.example .env        # 编辑填入 DOUBAO_API_KEY
 uvicorn app.main:app --port 8001
 ```
+
+> `.env` 已加入 `.gitignore`，API Key 不会提交到仓库。使用 `.env.example` 作为模板。
 
 ---
 
@@ -124,8 +150,18 @@ JiangShanQianLi/
 
 ---
 
-## 作者
+## 团队
 
-**胡箬玺** — 中国传媒大学 25 级智能工程与创意设计
+| 成员 | 分工 |
+|---|---|
+| **胡箬玺** | 全栈开发、交互设计、Shader 编写、视觉设计 |
+
+中国传媒大学 25 级智能工程与创意设计
 
 2026
+
+---
+
+## 许可
+
+MIT License
