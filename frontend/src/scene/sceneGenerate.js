@@ -223,13 +223,19 @@ export class SceneGenerate extends SceneBase {
         this.img.onerror = () => { this.imgFailed = true; this.img = null; };
         this.img.src = imageUrl;
         this.imgSrc = imageUrl;
+        this.apiDone = true;
       } else {
-        this.imgFailed = true;
+        // mock 或无效响应：等 3s 重试
+        console.warn('[Scene2] Invalid image URL, retrying...');
+        setTimeout(() => { if (!this.img && !this.imgFailed) this.callApi(); }, 3000);
+        setTimeout(() => { if (!this.img) { this.imgFailed = true; this.apiDone = true; } }, 85000);
+        return;
       }
     } catch (_e) {
-      this.imgFailed = true;
+      setTimeout(() => { if (!this.img && !this.imgFailed) this.callApi(); }, 5000);
+      setTimeout(() => { if (!this.img) { this.imgFailed = true; this.apiDone = true; } }, 85000);
+      return;
     }
-    this.apiDone = true;
   }
 
   exit() {
@@ -265,8 +271,15 @@ export class SceneGenerate extends SceneBase {
         this.phaseTime = 0;
       }
     } else if (this.phase === 'waiting') {
-      // 草图清晰可见，等待豆包 API 返回
-      if (this.apiDone) {
+      // 等待 API 返回 + 图片真正加载完毕
+      const imgReady = (this.img && this.img.complete) || this.imgFailed;
+      if (this.apiDone && imgReady) {
+        this.phase = 'showing';
+        this.phaseTime = 0;
+      }
+      // 90s 绝对超时兜底
+      if (this.phaseTime > 90000) {
+        this.imgFailed = true;
         this.phase = 'showing';
         this.phaseTime = 0;
       }

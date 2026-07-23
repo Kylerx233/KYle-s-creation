@@ -1,14 +1,24 @@
 from fastapi import APIRouter
 import httpx
+import base64
+from io import BytesIO
+from PIL import Image
 
 from app.core.config import settings
 
 router = APIRouter()
 
 
+def _make_test_png() -> str:
+    """生成一张 32×32 的有效 PNG 作为 API 测试图"""
+    img = Image.new("RGB", (32, 32), color=(128, 128, 128))
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
 @router.get("")
 def health_check() -> dict[str, str]:
-    # 测试豆包 API 连通性
     api_status = "unknown"
     if not settings.doubao_api_key:
         api_status = "no_key"
@@ -17,8 +27,8 @@ def health_check() -> dict[str, str]:
             r = httpx.post(
                 settings.doubao_api_base_url,
                 headers={"Authorization": f"Bearer {settings.doubao_api_key}", "Content-Type": "application/json"},
-                json={"model": settings.doubao_model, "prompt": "test", "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFklEQVR42mNkYPj/n4EwEIwBqhgHABXfAgkM1eHZAAAAAElFTkSuQmCC"},
-                timeout=10.0,
+                json={"model": settings.doubao_model, "prompt": "test", "image": _make_test_png()},
+                timeout=5.0,
             )
             api_status = f"http_{r.status_code}"
         except Exception as e:

@@ -504,7 +504,7 @@ export class SceneAwaken extends SceneBase {
         this._inscriptionEl.style.cssText=`
           position:fixed;inset:0;z-index:22;pointer-events:none;
           display:flex;flex-direction:column;align-items:center;justify-content:center;
-          color:#1a1814;opacity:0;transition:opacity 2s;
+          color:#e8dcc8;opacity:0;transition:opacity 2s;
         `;
         this._inscriptionEl.innerHTML=`
           <div style="font-family:'Ma Shan Zheng','Noto Serif SC',serif;font-size:clamp(2.2rem,5vw,4.5rem);letter-spacing:.2em;margin-bottom:1rem;text-align:center;">江山千里——绘梦成型</div>

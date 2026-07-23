@@ -113,9 +113,9 @@ class DoubaoService:
         return ""
 
     def _mock_response(self, payload: GenerationRequest) -> dict[str, str]:
-        preview = payload.sketch_data_url[:48]
+        # 降级方案：API 不可用时直接返回用户草图
         return {
-            "image_url": f"data:text/plain;base64,{base64.b64encode(preview.encode('utf-8')).decode('ascii')}",
+            "image_url": payload.sketch_data_url,
             "scene": payload.scene.value,
-            "message": f"mock generation using {settings.doubao_model}",
+            "message": "fallback: using sketch as output",
         }
