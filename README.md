@@ -2,6 +2,8 @@
 
 > AI × Interactive Art — 数字青绿山水交互装置
 
+![封面](assets/background.png)
+
 基于《千里江山图》美学，结合 AI 图像生成、Shader 流体模拟与手势识别的数字艺术交互作品。
 
 ---
